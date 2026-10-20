@@ -1,0 +1,322 @@
+---
+title: "Ejercicios"
+author: "Luis Molina Villar"
+date: "2026-10-20"
+output:
+  pdf_document:
+    toc: true
+    toc_depth: 3
+    number_sections: true
+  html_document:
+    echo: true
+    number_sections: true
+    theme: lumen
+    toc: true
+  bookdown::pdf_document2:
+    toc: true
+    toc_depth: 3
+    number_sections: true
+    figure_caption: "Figura" # Referencias en castellano
+    table_caption: "Tabla"
+  html_notebook:
+    echo: true
+    number_sections: true
+    toc: true
+  bookdown::html_document2:
+    echo: true
+    number_sections: true
+    theme: spacelab
+    toc: true
+    figure_caption: "Figura"
+    table_caption: "Tabla"
+always_allow_html: true
+params:
+  lang: ES
+lang: "`r switch(params$lang, ES = 'es-ES', EN = 'en-US')`"
+subtitle: "Análisis Exploratorio de datos. Máster en Ciencia de Datos- UV"
+language:
+  label:
+    fig: 'Figura '
+    tab: 'Tabla '
+    eq: 'Ecuación '
+    thm: 'Teorema '
+    lem: 'Lema '
+    def: 'Definición '
+    cor: 'Corolario '
+    prp: 'Proposición '
+    exm: 'Ejemplo '
+    exr: 'Ejercicio '
+    proof: 'Demostración. '
+    remark: 'Nota: '
+    solution: 'Solución. '
+---
+
+---
+
+```{r setup, cache = F, echo = F, message = F, warning = F, tidy = F}
+
+
+# CONFIGURACIÓN GENERAL
+library(knitr)
+options(width = 100)
+
+# Opciones generales de los chucks. Se utilizarán salvo cambios en el chunk
+opts_chunk$set(echo=F, message = F, error = F, warning = F, comment = NA, fig.align = 'center', dpi = 200, tidy = F, cache.path = '.cache/', fig.path = './figura/')
+
+# Opciones generales de dígitos cuando se incluyen tablas
+#options(xtable.type = 'html')
+knit_hooks$set(inline = function(x) {
+  
+  if(is.numeric(x)) {
+    round(x, getOption('digits'))
+  } else {
+    paste(as.character(x), collapse = ', ')
+  }
+})
+#knit_hooks$set(plot = knitr:::hook_plot_html)
+```
+
+## Ejemplo 2: fichero DFP1_11122015 124700.csv ##
+Antes de importar el fichero previsualizamos usando el asistente de R. Los hacemos con el paquete base y con el paquete readr, ya que son diferentes pues 
+```{r,include = FALSE}
+if( requireNamespace("utils")){
+  library("utils")
+
+}else{
+  install.packages("utils")
+}
+
+if( requireNamespace("hms")){
+  library("hms")
+
+}else{
+  install.packages("hms")
+}
+```
+Cargamos los datos usando la función `read.csv`, y convertimos fecha y hora con `as.POSIXlt` y `as.hms`. Acabamos guardando los datos modificados en la carpeta data de la carpeta results, usando el formato Rdata.
+```{r}
+fname <- './data/DFP1_11122015 124700.csv'
+
+DFP <- read.csv(fname,header=TRUE,sep = "\t")
+
+DFP$FECHA <- as.POSIXlt(DFP$FECHA,format = "%d/%m/%Y")
+DFP$HORA <- as.hms(DFP$HORA)
+save(DFP,file="./results/data/Deposito.Rdata")
+```
+
+
+*Inspección de los datos*
+
+Vamos a inspeccionar los datos del fichero que hemos cargado.
+
+Con la función `str` observamos las características principales del data frame, como dimensiones, nombre y formato de cada columna, y los valores de las primeras instancias. 
+```{r}
+str(DFP)
+```
+Con la función `head` observamos las 6 primeras instancias del data frame.
+```{r}
+head(DFP)
+```
+Con la función `tail` observamos las 6 últimas instancias del data frame.
+```{r}
+tail(DFP)
+```
+Con la función `summary` obtenemos un resumen estadístico de cada columna del data frame, excepto para la hora, que al estar en formato hms no se aplican estos estadísticos. En particular, de cada columna, obtenemos la media y los percentiles $0$ (mínimo),$0,0.25$, $0.5$(mediana),$0.75$,$1$(máximo).
+
+```{r}
+summary(DFP)
+```
+## 3 Fichero Transactions from a Bakery##
+
+Empezamos descargando el conjunto de datos Bakery Sales desde Kaggle, y comprobando que queda guardado en la ruta que queremos. No usamos el link finalmente porque no funciona con la función `download.file`, al requerir kaggle que iniciemos sesión.
+```{r}
+#filename <- "data/bakery_sales_revised.csv"
+
+#download.file(url = "https://www.kaggle.com/datasets/akashdeepkuila/bakery/download?datasetVersionNumber=2",destfile = "./data/bakery_sales_revised.csv")
+list.files("./data")
+```
+Ahora que tenemos los datos en el ordenador podemos importarlos a R como data frame.
+```{r,include = FALSE}
+
+if(requireNamespace("readr")){
+  library("readr")}else{
+    install.packages("readr")
+  }
+``` 
+ El código resulrtante de usa rel asistente de R con el paquete `readr` para importar los datos es el siguiente. Después de importarlos, los guardamos en la carpeta results.
+```{r}
+library(readr)
+bakery_sales_revised <- read_csv("data/bakery_sales_revised.csv", 
+    col_types = cols(date_time = col_datetime(format = "%m/%d/%Y %H:%M")))
+View(bakery_sales_revised)
+
+save(bakery_sales_revised,file="./results/data/BreadBasket.Rdata")
+
+```
+
+```{r}
+str(bakery_sales_revised)
+```
+```{r}
+head(bakery_sales_revised)
+```
+```{r}
+tail(bakery_sales_revised)
+```
+```{r}
+summary(bakery_sales_revised)
+```
+
+## Ejercicio 4 Fichero SPSS PsychBike.sav ##
+
+```{r,include = FALSE}
+if(requireNamespace("haven")){
+  library("haven")}else{
+    install.packages("haven")
+  }
+```
+
+```{r}
+filename <- "data/PsychBike.sav"
+
+data4 <- read_sav(filename)
+save(data4,file = "./results/data/PsychBike.Rdata")
+```
+Vamos a inspeccionar los datos con funciones similares a los de los ejercicios anteriores.
+```{r}
+dim(data4)
+```
+```{r}
+str(data4)
+```
+```{r}
+head(data4)
+```
+
+```{r}
+tail(data4)
+```
+
+```{r}
+summary(data4)
+```
+## Ejercicio 5 Fichero data iris.zip ##
+
+Abrimos el link de la página web donde se encuentran los datos y los descargamos. Comprobamos que se encuentran en la carpeta deseada.
+```{r}
+browseURL(url = "https://archive.ics.uci.edu/dataset/53/iris")
+
+download_link <- "https://archive.ics.uci.edu/static/public/53/iris.zip"
+
+download.file(download_link,destfile = "./data/iris.zip")
+
+list.files(path = "./data")
+```
+Vamos a descomprimir la carpeta de datos. Y visualizamos de nuevo los archivos.
+```{r}
+unzip("./data/iris.zip",exdir = "data")
+list.files("./data")
+```
+
+## Ejercicio 6 Fichero data iris.data##
+
+Importamos los datos descargados en el ejercicio anterior usando la función `read_data`. Cambiamos los nombres de las columnas por los que corresponde según la página web, y guardamos los datos en la carpeta results, al igual que el resto.
+
+```{r}
+iris_data <- read.table("./data/iris.data",sep=",")
+colnames(iris_data) <- c("sepal length","sepal width","petal length","petal width","class")
+
+save(iris_data,file = "./results/data/iris.Rdata")
+```
+
+Inspeccionamos el conjunto de datos al igual que hemos hecho con el resto
+```{r}
+str(iris_data)
+```
+
+```{r}
+head(iris_data)
+```
+
+```{r}
+tail(iris_data)
+```
+
+```{r}
+summary(iris_data)
+```
+## 7 Fichero JSON FileCodificado.json ##
+
+```{r,include = FALSE}
+if(requireNamespace("jsonlite")){
+  library("jsonlite")
+}else{
+  install.packages("jsonlite")
+}
+```
+Abrimos el fichero a importar `FileCodificado.json` en un editor de texto para comprobar que se puede leer y vemos que contiene datos sobre coches. Lo importamos a R usando la función `read_json` de la librería `jsonlite`. Usamos el parámetro `simplifyVector` para que los datos se conviertan en una tabla estructurada.
+
+```{r}
+datos_json <- read_json("./data/FileCodificado.json",simplifyVector = T)
+```
+Al igual que en los ejercicios anteriores, inspeccionamos los datos.
+
+```{r}
+str(datos_json)
+```
+
+```{r}
+head(datos_json)
+```
+
+```{r}
+tail(datos_json)
+```
+
+```{r}
+summary(datos_json)
+```
+
+## Ejercicio 8 Fichero JSON iris_json.json ##
+Abrimos el archivo `iris_json.json`con un editor de texto para comprobar su legibilidad, y observamos que contiene los mismos datos que los que hemos leído en `iris.data`, pero estructurados en formato JSON. Importamos el fichero usando la función `read_json`.
+
+```{r}
+json_iris<-read_json("./data/iris_json.json",simplifyVector = T)
+```
+Importamos el fichero a R usando la función `fromJSON`. La diferencia con la función anterior es que 
+
+```{r}
+json_iris_2 <- fromJSON("./data/iris_json.json",simplifyVector = T)
+```
+Almacenamos los resultados en `iris_json.RData` en results.
+```{r}
+save(json_iris,file = "./results/data/iris_json.Rdata")
+```
+Inspeccionamos los datos con diferentes funciones.
+```{r}
+str(iris_data)
+```
+```{r}
+head(iris_data)
+```
+
+```{r}
+tail(iris_data)
+```
+
+```{r}
+summary(iris_data)
+```
+Finalmente vamos a exportar datos a formato JSON, usando las funciones `write_JSON`,`to_JSON`.
+
+```{r}
+write_json(iris_data,path="./data/iris_json_v2.json")
+```
+
+```{r}
+toJSON(iris_data,path="./data/iris_json_v2.json")
+```
+```{r}
+toJSON(iris_data,path="./data/iris_json_v2.json",pretty = T)
+```
+La diferencia entre una función y otra es que la función `toJSON`transforma un objeto de R a JSON, pero el objeto sigue viviendo en R, sin embargo, la función `write_json` lo convierte a JSON escribiéndolo en un archivo. El parámetro `pretty` de la función `toJSON` ayuda a la legibilidad del resultado (muestra el JSON no como es, si no para poder verlo bien). 
